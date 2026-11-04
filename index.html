@@ -6,71 +6,130 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Framing">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#121214">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Framing Calculator</title>
 <style>
-:root{--bg:#ececf1;--card:#fff;--field:#f2f2f7;--fg:#1c1c1e;--sub:#6e6e73;--accent:#007aff;--line:#d1d1d6;--err:#d70015}
-@media (prefers-color-scheme:dark){:root{--bg:#121214;--card:#242426;--field:#1a1a1c;--fg:#f5f5f7;--sub:#98989d;--accent:#0a84ff;--line:#3a3a3c;--err:#ff453a}}
+:root{
+ --bg:#f2f2f7;--group:#fff;--fg:#000;--sub:rgba(60,60,67,.6);--sep:rgba(60,60,67,.18);--tint:#007aff;--tint-soft:rgba(0,122,255,.14);--err:#ff3b30;
+ --glass:rgba(255,255,255,.55);--glass-edge:rgba(255,255,255,.7);--glass-dark:rgba(0,0,0,.10);--glass-shadow:0 6px 22px rgba(0,0,0,.14);
+ --field:rgba(120,120,128,.12);
+}
+@media (prefers-color-scheme:dark){:root{
+ --bg:#000;--group:#1c1c1e;--fg:#fff;--sub:rgba(235,235,245,.6);--sep:rgba(84,84,88,.55);--tint:#0a84ff;--tint-soft:rgba(10,132,255,.24);--err:#ff453a;
+ --glass:rgba(44,44,46,.58);--glass-edge:rgba(255,255,255,.22);--glass-dark:rgba(0,0,0,.5);--glass-shadow:0 6px 22px rgba(0,0,0,.5);
+ --field:rgba(120,120,128,.24);}}
+@media (prefers-reduced-transparency:reduce){:root{--glass:var(--group)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px -apple-system,system-ui,sans-serif;padding:max(12px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom))}
-main{max-width:640px;margin:0 auto}
-h1{font-size:22px;margin:6px 4px 12px}
-.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
-.card h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:0 0 10px}
-label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
-input,select{width:100%;font-size:16px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--fg);min-height:44px}
-.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.x{flex:0 0 auto;color:var(--sub)}
-.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
-.chip{padding:10px 0;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--fg);font-size:15px;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center}
-.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.seg{display:flex;gap:6px}.seg .chip{flex:1}
-.hero{text-align:center}.hero .k{font-size:11px;letter-spacing:.08em;color:var(--sub);text-transform:uppercase}
-#zoom{font:700 clamp(30px,10vw,52px) ui-monospace,Menlo,monospace;color:var(--accent);margin:6px 0 2px;white-space:nowrap}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tile{background:var(--card);border-radius:14px;padding:12px}.tile .k{font-size:10px;letter-spacing:.08em;color:var(--sub);text-transform:uppercase}
-.tile .v{font-size:18px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
-.note{font-size:13px;color:var(--sub);line-height:1.4;margin:8px 4px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.3 -apple-system,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+ padding:env(safe-area-inset-top) 0 calc(96px + env(safe-area-inset-bottom))}
+main{max-width:560px;margin:0 auto;padding:0 16px}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+ border:.5px solid var(--glass-dark);box-shadow:inset 0 1px 0 var(--glass-edge),inset 0 -1px 0 var(--glass-dark),var(--glass-shadow)}
+h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px;margin:14px 4px 12px}
+/* hero + tiles (content layer: opaque) */
+.hero{background:var(--group);border-radius:22px;padding:14px 12px 12px;text-align:center}
+.k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
+#zoom{font:700 clamp(32px,11.4vw,54px)/1.1 ui-monospace,Menlo,monospace;color:var(--tint);margin:4px 0 2px;white-space:nowrap;letter-spacing:-.5px}
+#sub{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 6px}
+.tile{background:var(--group);border-radius:16px;padding:10px 10px 9px;min-width:0}
+.tile .v{font-size:15px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .s{font-size:11px;color:var(--sub);margin-top:1px;white-space:nowrap}
+.note{font-size:13px;color:var(--sub);line-height:1.38;margin:6px 6px 0}
 .err{color:var(--err)}
-button.big{width:100%;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-size:17px;font-weight:600;margin-top:4px}
-.hint{font-size:12px;color:var(--sub);margin-top:10px}
-</style></head><body><main>
-<h1>Framing Calculator</h1>
+/* grouped lists */
+.gh{font-size:13px;text-transform:uppercase;color:var(--sub);margin:22px 16px 6px;letter-spacing:.02em}
+.list{background:var(--group);border-radius:20px;overflow:hidden}
+.item{display:flex;align-items:center;min-height:46px;padding:0 16px;gap:12px;position:relative}
+.item+.item::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.item>label{flex:0 0 auto;font-size:17px;color:var(--fg)}
+.item .ctl{flex:1;display:flex;justify-content:flex-end;align-items:center;gap:8px;min-width:0}
+input,select{font:inherit;font-size:17px;color:var(--tint);background:transparent;border:0;outline:0;text-align:right;min-width:0;width:100%;
+ -webkit-appearance:none;appearance:none;padding:10px 0;border-radius:0}
+select{direction:rtl;text-overflow:ellipsis;white-space:nowrap;padding-right:2px;cursor:pointer}
+select option{direction:ltr}
+input::placeholder{color:var(--sub);opacity:.7}
+.ctl .x{color:var(--sub);flex:0 0 auto}
+.ctl input.n{width:5.2em}.ctl input.s{width:4.2em}
+.ctl.two input{flex:1}
+.chev::after{content:"\203A";color:var(--sub);font-size:20px;margin-left:2px;flex:0 0 auto;transform:translateY(-1px)}
+/* glass controls */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;scroll-snap-align:start;min-width:56px;padding:9px 14px;border-radius:999px;font-size:16px;font-weight:600;text-align:center;color:var(--fg);
+ background:var(--field);border:.5px solid transparent;transition:background .18s,color .18s}
+.chip.on{background:var(--tint);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.seg{display:flex;padding:3px;border-radius:999px;gap:2px;min-width:150px}
+.seg button{flex:1;border:0;background:transparent;color:var(--fg);font:inherit;font-size:15px;font-weight:600;padding:7px 14px;border-radius:999px;transition:background .18s,color .18s}
+.seg button.on{background:var(--tint);color:#fff}
+details.list>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:0 16px;cursor:pointer}
+details.list>summary::-webkit-details-marker{display:none}
+details.list>summary::after{content:"\203A";color:var(--sub);font-size:22px;transition:transform .2s}
+details[open].list>summary::after{transform:rotate(90deg)}
+.hintrow{padding:2px 16px 10px;font-size:13px;color:var(--sub)}
+/* floating glass bars */
+#mini{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 6px);z-index:20;border-radius:999px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+ opacity:0;transform:translateY(-12px);pointer-events:none;transition:opacity .2s,transform .2s;max-width:536px;margin:0 auto}
+#mini.show{opacity:1;transform:none}
+#mini b{font:700 20px ui-monospace,Menlo,monospace;color:var(--tint);white-space:nowrap}
+#mini span{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+#bar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:20;border-radius:999px;padding:6px;display:flex;gap:6px;max-width:536px;margin:0 auto}
+#bar button{flex:1;border:0;border-radius:999px;font:inherit;font-size:17px;font-weight:600;padding:13px 10px;color:var(--fg);background:transparent}
+#bar button.p{background:var(--tint);color:#fff}
+#bar button:active{opacity:.7}
+.foot{font-size:12px;color:var(--sub);margin:18px 8px 0;text-align:center;line-height:1.4}
+</style></head><body>
+<div id="mini" class="glass"><b id="mz">--</b><span id="ms"></span></div>
+<main>
+<h1>Framing</h1>
 
-<section class="card"><h2>Camera</h2>
-<label>Manufacturer</label><select id="mfr"></select>
-<label>Sensor mode</label><select id="mode"></select>
-<label>Source px</label><div class="row"><input id="sw" inputmode="numeric"><span class="x">&times;</span><input id="sh" inputmode="numeric"></div>
-<label>Squeeze</label><div class="row"><select id="sqs"><option value="1">Spherical 1.0x</option><option>1.3</option><option>1.33</option><option>1.4</option><option>1.5</option><option>1.8</option><option>2</option><option value="c">Custom</option></select><input id="sq" inputmode="decimal" value="1"></div>
-</section>
-
-<section class="card"><h2>Framing</h2>
-<label>Target aspect</label>
-<div class="row"><select id="ars"></select><input id="ar" inputmode="decimal"></div>
-<div class="chips" id="chips"></div>
-<label>Safety margin %</label>
-<div class="row"><input id="sf" inputmode="decimal" value="0"><select id="rd"><option value="near">Rounding: nearest even</option><option value="up">Rounding: round up</option></select></div>
-<label>Zoom basis</label>
-<div class="seg" id="zb"><div class="chip on" data-v="fit">Fit</div><div class="chip" data-v="fitall">Fit All</div></div>
-<label>Container</label><select id="ct"></select>
-<div class="hint">Or enter an extraction directly (overrides the aspect, never rounded):</div>
-<label>Extraction px</label><div class="row"><input id="ew" inputmode="numeric"><span class="x">&times;</span><input id="eh" inputmode="numeric"></div>
-<label>Extraction % of width</label><input id="ep" inputmode="decimal">
-</section>
-
-<section class="card"><h2>Delivery</h2>
-<label>Dailies px</label><div class="row"><input id="tw" inputmode="numeric" placeholder="1920"><span class="x">&times;</span><input id="th" inputmode="numeric" placeholder="auto"></div>
-</section>
-
-<section class="card hero"><div class="k">Zoom required</div><div id="zoom">--</div><div id="sub" class="note"></div></section>
-<div class="grid" id="tiles"></div>
+<section class="hero" id="hero"><div class="k">Zoom required</div><div id="zoom">--</div><div id="sub"></div></section>
+<div class="tiles" id="tiles"></div>
 <div class="note" id="notes"></div>
-<button class="big" id="copy">Copy Result</button>
-<div class="note">Same math as Framing Calculator 7.35-beta (desktop). Nearest even matches the Netflix framing tool; Round up always goes to the next even number.</div>
+
+<div class="gh">Camera</div>
+<div class="list">
+ <div class="item chev"><label for="mfr">Manufacturer</label><div class="ctl"><select id="mfr"></select></div></div>
+ <div class="item chev"><label for="mode">Sensor mode</label><div class="ctl"><select id="mode"></select></div></div>
+ <div class="item"><label>Source px</label><div class="ctl two"><input id="sw" class="n" inputmode="numeric" aria-label="Source width"><span class="x">&times;</span><input id="sh" class="n" inputmode="numeric" aria-label="Source height"></div></div>
+ <div class="item"><label>Squeeze</label><div class="ctl"><select id="sqs" style="width:auto"><option value="1">Spherical 1.0x</option><option>1.3</option><option>1.33</option><option>1.4</option><option>1.5</option><option>1.8</option><option>2</option><option value="c">Custom</option></select><input id="sq" class="s" inputmode="decimal" value="1" aria-label="Squeeze value"></div></div>
+</div>
+
+<div class="gh">Framing</div>
+<div class="list">
+ <div class="item chev"><label for="ars">Target aspect</label><div class="ctl"><select id="ars"></select></div></div>
+ <div class="item"><label>Aspect value</label><div class="ctl"><input id="ar" inputmode="decimal" aria-label="Aspect value"><span class="x">:1</span></div></div>
+ <div class="chips" id="chips" style="border-top:.5px solid var(--sep);border-bottom:.5px solid var(--sep)"></div>
+ <div class="item"><label>Safety margin</label><div class="ctl"><input id="sf" inputmode="decimal" value="0" style="width:4em" aria-label="Safety margin percent"><span class="x">%</span></div></div>
+ <div class="item chev"><label for="rd">Rounding</label><div class="ctl"><select id="rd"><option value="near">Nearest even</option><option value="up">Round up</option></select></div></div>
+ <div class="item"><label>Zoom basis</label><div class="ctl"><div class="seg glass" id="zbseg"><button data-v="fit" class="on">Fit</button><button data-v="fitall">Fit All</button></div></div></div>
+ <div class="item chev"><label for="ct">Container</label><div class="ctl"><select id="ct"></select></div></div>
+</div>
+
+<div class="gh">Delivery</div>
+<div class="list">
+ <div class="item"><label>Dailies px</label><div class="ctl two"><input id="tw" class="n" inputmode="numeric" placeholder="1920" aria-label="Dailies width"><span class="x">&times;</span><input id="th" class="n" inputmode="numeric" placeholder="auto" aria-label="Dailies height"></div></div>
+</div>
+
+<div class="gh">Or enter an extraction</div>
+<details class="list" id="direct"><summary>Extraction px or %</summary>
+ <div class="item"><label>Extraction px</label><div class="ctl two"><input id="ew" class="n" inputmode="numeric" aria-label="Extraction width"><span class="x">&times;</span><input id="eh" class="n" inputmode="numeric" aria-label="Extraction height"></div></div>
+ <div class="item"><label>Extraction %</label><div class="ctl"><input id="ep" inputmode="decimal" style="width:5em" aria-label="Extraction percent"><span class="x">%</span></div></div>
+ <div class="hintrow">Overrides the target aspect. Direct entries are never rounded.</div>
+</details>
+
+<div class="foot">Same math as Framing Calculator 7.35-beta.<br>Nearest even matches the Netflix framing tool.</div>
 </main>
+
+<div id="bar" class="glass"><button id="reset">Reset</button><button id="copy" class="p">Copy Result</button></div>
+
+<script src="cameras.js"></script>
 <script>
-const CAMERAS={"ARRI":{"ALEXA 35 - 4.6K 3:2 Open Gate":[4608,3164],"ALEXA 35 - 4K 16:9":[4096,2304],"ALEXA 35 - 4K 2:1":[4096,2048],"ALEXA 35 - 3.8K 16:9":[3840,2160],"ALEXA 35 - 3.3K 6:5":[3328,2790],"ALEXA 35 Xtreme - 4.6K 3:2 Open Gate":[4608,3164],"ALEXA 35 Xtreme - 4.6K 16:9":[4608,2592],"ALEXA 35 Xtreme - 4K 16:9":[4096,2304],"ALEXA 35 Xtreme - 3.8K 16:9":[3840,2160],"ALEXA 35 Xtreme - 3.8K 2.39:1":[3840,1608],"ALEXA 35 Xtreme - 3.3K 6:5":[3328,2790],"ALEXA 35 Xtreme - 2K 16:9 S16":[2048,1152],"ALEXA 35 Xtreme - HD 16:9 S16":[1920,1080],"ALEXA 265 - 6.5K 2.12:1 Open Gate":[6560,3100],"ALEXA 265 - 5.1K 1.65:1":[5120,3100],"ALEXA 265 - 4.5K LF 3:2":[4448,3096],"ALEXA 65 - 6.5K Open Gate":[6560,3100],"ALEXA 65 - 5K 16:9 (1.78 Crop)":[5120,2880],"ALEXA 65 - 4.3K 3:2 (1.50 Crop)":[4320,2880],"ALEXA 65 - LF Open Gate 4.5K":[4448,3096],"ALEXA 65 - 4K UHD":[3840,2160],"ALEXA LF - 4.5K 3:2 Open Gate":[4448,3096],"ALEXA LF - 4.5K 2.39:1":[4448,1856],"ALEXA LF - UHD 16:9":[3840,2160],"ALEXA Mini LF - 4.5K 3:2 Open Gate":[4448,3096],"ALEXA Mini LF - 4.5K 2.39:1":[4448,1856],"ALEXA Mini LF - UHD 16:9":[3840,2160],"ALEXA Mini / SXT - 3.4K 3:2 Open Gate":[3424,2202],"ALEXA Mini / SXT - 3.2K 16:9":[3200,1800],"ALEXA Mini / SXT - 2.8K 16:9":[2880,1620],"ALEXA Mini / SXT - 2.8K 4:3 (anamorphic)":[2880,2160],"ALEXA Mini / SXT - 4K UHD":[3840,2160]},"RED":{"V-RAPTOR 8K VV - 8K 17:9":[8192,4320],"V-RAPTOR 8K VV - 8K 16:9":[7680,4320],"V-RAPTOR 8K VV - 8K 2:1":[8192,4096],"V-RAPTOR 8K VV - 8K 2.4:1":[8192,3456],"V-RAPTOR 8K VV - 7K 17:9":[7168,3780],"V-RAPTOR 8K VV - 7K 2.4:1":[7168,3024],"V-RAPTOR 8K VV - 6K 17:9 (S35)":[6144,3240],"V-RAPTOR 8K VV - 6K 16:9":[5760,3240],"V-RAPTOR 8K VV - 6K 2.4:1":[6144,2592],"V-RAPTOR 8K VV - 5K 17:9":[5120,2700],"V-RAPTOR 8K VV - 5K 2.4:1":[5120,2160],"V-RAPTOR 8K VV - 4K 17:9":[4096,2160],"V-RAPTOR 8K VV - 4K 16:9":[3840,2160],"V-RAPTOR 8K VV - 4K 2.4:1":[4096,1728],"V-RAPTOR 8K VV - 2K 17:9":[2048,1080],"MONSTRO 8K VV - 8K 17:9":[8192,4320],"MONSTRO 8K VV - 8K 2.4:1":[8192,3456],"MONSTRO 8K VV - 7K 17:9":[7168,3780],"MONSTRO 8K VV - 6K 17:9":[6144,3240],"MONSTRO 8K VV - 5K 17:9":[5120,2700],"MONSTRO 8K VV - 4K 17:9":[4096,2160],"HELIUM 8K S35 - 8K 17:9":[8192,4320],"HELIUM 8K S35 - 8K 2.4:1":[8192,3456],"HELIUM 8K S35 - 6K 17:9":[6144,3240],"GEMINI 5K S35 - 5K 17:9":[5120,2700],"GEMINI 5K S35 - 5K 2.4:1":[5120,2160],"GEMINI 5K S35 - 4K 17:9":[4096,2160],"DRAGON 6K S35 - 6K 17:9":[6144,3160],"DRAGON 6K S35 - 5K 17:9":[5120,2700],"KOMODO 6K S35 - 6K 17:9":[6144,3240],"KOMODO 6K S35 - 6K 2.4:1":[6144,2592],"KOMODO 6K S35 - 4K 17:9":[4096,2160]},"Sony":{"VENICE 2 8K - 8.6K 3:2 FF":[8640,5760],"VENICE 2 8K - 8.6K 17:9 FF":[8640,4556],"VENICE 2 8K - 8.2K 17:9 FF":[8192,4320],"VENICE 2 8K - 8.2K 2.39:1 FF":[8192,3432],"VENICE 2 8K - 5.8K 17:9 S35":[5792,3056],"VENICE 2 8K - 5.8K 4:3 S35":[5792,4278],"VENICE 2 8K - 5.8K 6:5 S35":[5792,4854],"VENICE / VENICE 2 6K - 6K 3:2 FF":[6048,4032],"VENICE / VENICE 2 6K - 6K 17:9 FF":[6048,3192],"VENICE - 4K 17:9 S35":[4096,2160],"BURANO - 8.6K 16:9 FF":[8632,4856],"BURANO - 8.6K 17:9 FF":[8632,4552],"BURANO - 6K 16:9 FF crop":[6052,3404],"BURANO - 5.8K 16:9 S35":[5760,3240],"BURANO - 5.8K 17:9 S35":[5760,3036],"BURANO - 4K 17:9 S35c":[4096,2160],"FX9 - 4K UHD":[3840,2160],"FX6 - 4K UHD":[3840,2160],"FX6 - 4K DCI":[4096,2160],"FX6 - Full HD":[1920,1080],"FX6 - RAW 4.2K 16:9":[4264,2408],"FX3 - 4K UHD":[3840,2160],"FX3 - Full HD":[1920,1080],"FX3 - RAW 4.2K 16:9":[4264,2408],"A7R IV - Full Frame Photo":[9504,6336],"A7R IV - 4K Video":[3840,2160]},"Panavision":{"DXL2 - 8K":[8192,4320],"DXL2 - 5.4K":[5384,2700]},"Canon":{"C500 II - 5.9K FF":[5952,3140],"C300 III - 4K S35":[4096,2160],"R5 C - 8K FF":[8192,4320]},"Blackmagic Design":{"URSA Mini Pro 12K":[12288,6480],"URSA Mini Pro 4.6K G2":[4608,2592],"Pocket 6K":[6144,3456],"Pocket 4K":[4096,2160]},"Nikon":{"ZR - 6K 16:9 FF":[6048,3402],"ZR - 5.4K 16:9 FF":[5376,3024],"ZR - 4K RAW 16:9 FF":[4032,2268],"ZR - 4K DCI 17:9 FF":[4096,2160],"ZR - 4K UHD 16:9 FF":[3840,2160],"ZR - 4K RAW 16:9 DX crop":[3984,2240],"ZR - Full HD 16:9":[1920,1080]},"Panasonic":{"VariCam LT - 4K":[4096,2160],"VariCam Pure - 5.7K":[5720,3016],"GH6 - 5.8K 4:3 Open Gate":[5760,4320],"GH6 - 5.7K 17:9":[5728,3024],"GH6 - C4K 17:9":[4096,2160],"GH6 - 4K UHD 16:9":[3840,2160]},"GoPro":{"HERO13 - 5.3K 16:9":[5312,2988],"HERO13 - 5.3K 8:7":[5312,4648],"HERO13 - 4K 16:9":[3840,2160],"HERO13 - 4K 4:3":[4000,3000],"HERO13 - 4K 8:7":[3840,3360],"HERO13 - 4K 9:16 vertical":[2160,3840],"HERO13 - 2.7K 16:9":[2704,1520],"HERO13 - 2.7K 4:3":[2704,2028],"HERO13 - 1080p 16:9":[1920,1080],"HERO13 - 1080p 9:16 vertical":[1080,1920]},"DJI":{"Ronin 4D 8K - 8K 17:9 Full Frame":[8192,4320],"Ronin 4D 8K - 5.6K 17:9 Super 35":[5568,2952],"Ronin 4D - 6K":[6016,3200],"Ronin 4D - C4K 17:9":[4096,2160],"Ronin 4D - 2K 17:9":[2048,1080],"Inspire 3 - 8K":[8192,4320],"Mavic 3 Cine - 5.1K":[5120,2700],"Mavic 3 Cine - DCI 4K":[4096,2160],"Mavic 3 Cine - 4K UHD":[3840,2160],"Osmo Action 5 Pro - 4K 16:9":[3840,2160],"Osmo Action 5 Pro - 4K 4:3":[3840,2880],"Osmo Pocket 3 - 4K 16:9":[3840,2160]},"Custom":{"Custom...":null}};
 const DCI_239=2048/858,DCI_190=4096/2160,DCI_185=1998/1080,R_189=17/9;
 const ASPECTS=[["Source",null],["1.78:1 (16:9)",16/9],["1.85:1 (DCI flat)",DCI_185],["1.89:1 (17:9)",R_189],["1.90:1 (DCI full)",DCI_190],["2.00:1",2],["2.20:1",2.2],["2.35:1",2.35],["2.39:1",DCI_239],["2.39:1 (exact)",2.39],["2.40:1",2.4],["1.33:1 (4:3)",4/3],["Custom",null]];
 const CHIPS=[["1.78",16/9],["1.85",DCI_185],["1.89",R_189],["1.90",DCI_190],["2.00",2],["2.20",2.2],["2.35",2.35],["2.39",DCI_239],["2.40",2.4]];
@@ -104,40 +163,57 @@ function solve(o){
   if(tw&&th){dw=pyRound(tw);dh=pyRound(th)}else{dw=tw?pyRound(tw):1920;dh=pyRound(dw/eaD);notes.push(`Dailies res estimated at ${dw} wide: ${dw}x${dh}.`)}
   return {sw,sh,squeeze,saD,extW,extH,extPct,eaD,zoom,zb,ca:c,dw,dh,ax:(sw-extW)/2,ay:(sh-extH)/2,notes};
 }
-// UI
+// ---- UI ----
 const num=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:null};
 let zb="fit",last=null;
 function opts(sel,items){sel.innerHTML="";items.forEach((t,i)=>{const o=document.createElement("option");o.value=i;o.textContent=t;sel.appendChild(o)})}
-opts($("mfr"),Object.keys(CAMERAS));
-function modes(){return Object.keys(CAMERAS[Object.keys(CAMERAS)[$("mfr").value]])}
-function fillModes(){opts($("mode"),modes());applyMode()}
-function applyMode(){const m=CAMERAS[Object.keys(CAMERAS)[$("mfr").value]],r=m[modes()[$("mode").value]];if(r){$("sw").value=r[0];$("sh").value=r[1]}calc()}
+const mfrKeys=()=>Object.keys(CAMERAS),modeKeys=()=>Object.keys(CAMERAS[mfrKeys()[$("mfr").value]]);
+const modeName=()=>modeKeys()[$("mode").value]||"",mfrName=()=>mfrKeys()[$("mfr").value]||"";
+opts($("mfr"),mfrKeys());
+function fillModes(){opts($("mode"),modeKeys());applyMode()}
+function applyMode(){const r=CAMERAS[mfrName()][modeName()];if(r){$("sw").value=r[0];$("sh").value=r[1]}calc()}
 $("mfr").onchange=fillModes;$("mode").onchange=applyMode;
 opts($("ars"),ASPECTS.map(a=>a[0]));opts($("ct"),CONTAINERS.map(a=>a[0]));
-CHIPS.forEach(([t,v])=>{const d=document.createElement("div");d.className="chip";d.textContent=t;d.onclick=()=>{$("ars").value=ASPECTS.length-1;$("ar").value=afmt(v);calc()};$("chips").appendChild(d)});
-$("ars").value=8;$("ar").value=afmt(DCI_239);
+CHIPS.forEach(([t,v])=>{const d=document.createElement("div");d.className="chip";d.textContent=t;d.dataset.v=v;d.onclick=()=>{$("ars").value=ASPECTS.length-1;$("ar").value=afmt(v);calc()};$("chips").appendChild(d)});
 function srcAspect(){const w=num("sw"),h=num("sh"),s=num("sq")||1;return w&&h?afmt(w/h*s):""}
+function setDefaults(){
+  $("ars").value=8;$("ar").value=afmt(DCI_239);$("sf").value="0";$("rd").value="near";$("ct").value=0;
+  $("sqs").value="1";$("sq").value="1";["ew","eh","ep","tw","th"].forEach(i=>$(i).value="");
+  setZb("fit");$("direct").open=false;
+  $("mfr").value=0;opts($("mode"),modeKeys());
+  const m=modeKeys().indexOf("ALEXA 265 - 6.5K 2.12:1 Open Gate");$("mode").value=m>=0?m:0;
+  applyMode();
+}
 $("ars").onchange=()=>{const a=ASPECTS[$("ars").value];if(a[0]==="Source")$("ar").value=srcAspect();else if(a[1])$("ar").value=afmt(a[1]);calc()};
 $("ar").addEventListener("input",()=>{if(ASPECTS[$("ars").value][0]==="Source"&&$("ar").value!==srcAspect())$("ars").value=ASPECTS.length-1});
 $("sqs").onchange=()=>{if($("sqs").value!=="c")$("sq").value=$("sqs").value;calc()};
 $("sq").addEventListener("input",()=>{$("sqs").value="c"});
-document.querySelectorAll("#zb .chip").forEach(c=>c.onclick=()=>{document.querySelectorAll("#zb .chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");zb=c.dataset.v;calc()});
+function setZb(v){zb=v;document.querySelectorAll("#zbseg button").forEach(b=>b.classList.toggle("on",b.dataset.v===v))}
+document.querySelectorAll("#zbseg button").forEach(b=>b.onclick=()=>{setZb(b.dataset.v);calc()});
 document.querySelectorAll("input,select").forEach(e=>{if(!["mfr","mode"].includes(e.id)){e.addEventListener("input",calc);e.addEventListener("change",calc)}});
-function tiles(r){const T=[["Extraction",`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)}`],["Extraction %",r.extPct.toFixed(2)+"%"],["Aspect",r.eaD.toFixed(3)+":1"],["Dailies",`${r.dw} × ${r.dh}`],["Anchor (centered)",`X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`],["Source",`${r.sw} × ${r.sh} (${r.saD.toFixed(3)}:1)`]];
-  $("tiles").innerHTML=T.map(([k,v])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("")}
-const modeName=()=>modes()[$("mode").value]||"",mfrName=()=>Object.keys(CAMERAS)[$("mfr").value]||"";
+function tiles(r){
+  const T=[["Extraction",`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)}`,""],["Extraction %",r.extPct.toFixed(2)+"%",""],["Aspect",r.eaD.toFixed(3)+":1",""],
+   ["Dailies",`${r.dw} × ${r.dh}`,""],["Anchor X / Y",`${+r.ax.toFixed(1)} / ${+r.ay.toFixed(1)}`,"centered"],["Source",`${r.sw} × ${r.sh}`,r.saD.toFixed(3)+":1"]];
+  $("tiles").innerHTML=T.map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:""}</div>`).join("")}
+function chipState(){const a=num("ar"),src=ASPECTS[$("ars").value][0]==="Source";
+  document.querySelectorAll("#chips .chip").forEach(c=>c.classList.toggle("on",!src&&a!==null&&Math.abs(parseFloat(c.dataset.v)-a)<1e-7))}
 function calc(){
   const hasExt=(num("ew")&&num("eh"))||num("ep");
   if(!hasExt&&ASPECTS[$("ars").value][0]==="Source")$("ar").value=srcAspect();
+  chipState();
   try{
     const r=solve({sw:num("sw"),sh:num("sh"),tw:num("tw"),th:num("th"),ta:hasExt?null:num("ar"),ew:hasExt?num("ew"):null,eh:hasExt?num("eh"):null,ep:num("ep"),safety:num("sf")||0,squeeze:num("sq")||1,zb,ca:CONTAINERS[$("ct").value][1]||((num("tw")&&num("th"))?num("tw")/num("th"):null),rounding:$("rd").value});
-    last=r;$("zoom").textContent=zfmt(r.zoom)+"×";
+    last=r;const z=zfmt(r.zoom)+"×";$("zoom").textContent=z;$("mz").textContent=z;
     $("sub").textContent=`${modeName()} · ${r.squeeze!==1?r.squeeze+"x anamorphic":"spherical"} · ${zb==="fitall"?"Fit All in "+CONTAINERS[$("ct").value][0]:"Fit"}`;
+    $("ms").textContent=`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)} · ${r.dw} × ${r.dh}`;
     tiles(r);$("notes").className="note";$("notes").textContent=r.notes.join(" ");
   }catch(e){$("notes").className="note err";$("notes").textContent=e.message}
 }
 $("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Extraction ${r.extW.toFixed(0)} x ${r.extH.toFixed(0)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
   try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){prompt("Copy:",t)}setTimeout(()=>$("copy").textContent="Copy Result",1200)};
+$("reset").onclick=setDefaults;
+// compact glass bar appears once the big readout scrolls away
+if("IntersectionObserver"in window){new IntersectionObserver(es=>{$("mini").classList.toggle("show",!es[0].isIntersecting)},{rootMargin:"-8px 0px 0px 0px"}).observe($("hero"))}
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-fillModes();
+setDefaults();
 </script></body></html>
