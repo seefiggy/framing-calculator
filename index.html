@@ -30,7 +30,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.3 -apple-system,"
 main{max-width:560px;margin:0 auto;padding:0 16px}
 .glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
  border:.5px solid var(--glass-dark);box-shadow:inset 0 1px 0 var(--glass-edge),inset 0 -1px 0 var(--glass-dark),var(--glass-shadow)}
-h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px;margin:14px 4px 12px}
+h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px;margin:14px 4px 8px}
+.bars{height:6px;width:210px;max-width:62%;margin:0 4px 14px;border-radius:1px;background:linear-gradient(90deg,#bfbfbf 0 14.2857%,#bfbf00 0 28.5714%,#00bfbf 0 42.8571%,#00bf00 0 57.1428%,#bf00bf 0 71.4285%,#bf0000 0 85.7142%,#0000bf 0)}
 /* hero + tiles (content layer: opaque) */
 .hero{background:var(--group);border-radius:22px;padding:14px 12px 12px;text-align:center}
 .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
@@ -86,7 +87,8 @@ details[open].list>summary::after{transform:rotate(90deg)}
 </style></head><body>
 <div id="mini" class="glass"><b id="mz">--</b><span id="ms"></span></div>
 <main>
-<h1>Framing</h1>
+<h1>Framing Calculator</h1>
+<div class="bars" aria-hidden="true"></div>
 
 <section class="hero" id="hero"><div class="k">Zoom required</div><div id="zoom">--</div><div id="sub"></div></section>
 <div class="tiles" id="tiles"></div>
