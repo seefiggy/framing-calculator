@@ -39,8 +39,9 @@ h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px;margin:14p
 .z5{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 4px}
 .z5 b{font:700 20px ui-monospace,Menlo,monospace;color:var(--fg);white-space:nowrap}
 #sub{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 6px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:row dense;gap:8px;margin:8px 0 6px}
 .tile{background:var(--group);border-radius:16px;padding:10px 10px 9px;min-width:0}
+.tile.wide{grid-column:span 2}
 .tile .v{font-size:15px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile .s{font-size:11px;color:var(--sub);margin-top:1px;white-space:nowrap}
 .note{font-size:13px;color:var(--sub);line-height:1.38;margin:6px 6px 0}
@@ -110,7 +111,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
  <div class="item"><label>Aspect value</label><div class="ctl"><input id="ar" inputmode="decimal" aria-label="Aspect value"><span class="x">:1</span></div></div>
  <div class="chips" id="chips" style="border-top:.5px solid var(--sep);border-bottom:.5px solid var(--sep)"></div>
  <div class="item"><label>Safety margin</label><div class="ctl"><input id="sf" inputmode="decimal" value="0" style="width:4em" aria-label="Safety margin percent"><span class="x">%</span></div></div>
- <div class="item chev"><label for="rd">Rounding</label><div class="ctl"><select id="rd"><option value="near">Nearest even</option><option value="up">Round up</option></select></div></div>
+ <div class="item chev"><label for="rd">Rounding</label><div class="ctl"><select id="rd"><option value="near">Nearest even</option><option value="up">Round up</option><option value="true">True math</option></select></div></div>
  <div class="item"><label>Zoom basis</label><div class="ctl"><div class="seg glass" id="zbseg"><button data-v="fit" class="on">Fit</button><button data-v="fitall">Fit All</button></div></div></div>
  <div class="item chev"><label for="ct">Container</label><div class="ctl"><select id="ct"></select></div></div>
 </div>
@@ -127,7 +128,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
  <div class="hintrow">Overrides the target aspect. Direct entries are never rounded.</div>
 </details>
 
-<div class="foot">Same math as Framing Calculator 7.35-beta.<br>Nearest even matches the Netflix framing tool.</div>
+<div class="foot">Same math as Framing Calculator 7.35-beta.<br>Nearest even matches the Netflix framing tool. True math keeps the exact decimals.</div>
 </main>
 
 <div id="bar" class="glass"><button id="reset">Reset</button><button id="copy" class="p">Copy Result</button></div>
@@ -141,6 +142,7 @@ const CONTAINERS=[["Dailies frame",null],["16:9 (1.78)",16/9],["1.90:1 (DCI)",DC
 const ZOOM_DECIMALS=9;
 const $=id=>document.getElementById(id);
 const zfmt=z=>z.toFixed(ZOOM_DECIMALS);
+const nfmt=x=>(+x.toFixed(3)).toString();
 const afmt=v=>String(+v.toPrecision(10));
 function pyRound(x){const f=Math.floor(x),d=x-f;if(Math.abs(d-0.5)<1e-12)return f%2===0?f:f+1;return Math.round(x)}
 function evenNear(x,limit){const v=2*Math.floor(x/2+0.5+1e-9);return v<=limit?v:2*Math.floor(limit/2)}
@@ -155,10 +157,11 @@ function solve(o){
     let fw,fh,axis;
     if(ta>=saD){fw=sw;fh=fw*squeeze/ta;axis="width"}else{fh=sh;fw=fh*ta/squeeze;axis="height"}
     let lw,lh;
-    if(rounding==="up"){lw=evenUp(fw,sw);lh=evenUp(fh,sh);extW=evenUp(fw*sf,sw);extH=evenUp(fh*sf,sh)}
+    if(rounding==="true"){lw=fw;lh=fh;extW=fw*sf;extH=fh*sf}
+    else if(rounding==="up"){lw=evenUp(fw,sw);lh=evenUp(fh,sh);extW=evenUp(fw*sf,sw);extH=evenUp(fh*sf,sh)}
     else{lw=evenNear(fw,sw);lh=evenNear(fh,sh);extW=evenNear(lw*sf,sw);extH=evenNear(lh*sf,sh)}
     const eff=lw?(1-extW/lw)*100:0;extPct=extW/sw*100;
-    notes.push(`Target ${ta.toFixed(3)}:1 vs source display ${saD.toFixed(3)}:1 -> ${axis} fully used. Extraction ${extW}x${extH}`+(safety&&Math.abs(eff-safety)>1e-9?` (${rounding==="up"?"rounded up":"nearest even"}; effective protection ${+eff.toPrecision(10)}%).`:"."));
+    notes.push(`Target ${ta.toFixed(3)}:1 vs source display ${saD.toFixed(3)}:1 -> ${axis} fully used. Extraction ${nfmt(extW)}x${nfmt(extH)}`+(rounding==="true"?" (true math, not rounded).":safety&&Math.abs(eff-safety)>1e-9?` (${rounding==="up"?"rounded up":"nearest even"}; effective protection ${+eff.toPrecision(10)}%).`:"."));
   }else throw new Error("Enter a target aspect, extraction resolution, or extraction %.");
   const c=ca||16/9;let zoom;
   if(zb==="fitall"&&saD<c){zoom=c*sh/(extW*squeeze);notes.push(`Zoom ${zfmt(zoom)}x: Fit All in a ${c.toFixed(3)}:1 container (whole image inside the container, extraction then fills its width).`)}
@@ -196,9 +199,10 @@ function setZb(v){zb=v;document.querySelectorAll("#zbseg button").forEach(b=>b.c
 document.querySelectorAll("#zbseg button").forEach(b=>b.onclick=()=>{setZb(b.dataset.v);calc()});
 document.querySelectorAll("input,select").forEach(e=>{if(!["mfr","mode"].includes(e.id)){e.addEventListener("input",calc);e.addEventListener("change",calc)}});
 function tiles(r){
-  const T=[["Extraction",`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)}`,""],["Extraction %",r.extPct.toFixed(2)+"%",""],["Aspect",r.eaD.toFixed(3)+":1",""],
-   ["Dailies",`${r.dw} × ${r.dh}`,""],["Anchor X / Y",`${+r.ax.toFixed(1)} / ${+r.ay.toFixed(1)}`,"centered"],["Source",`${r.sw} × ${r.sh}`,r.saD.toFixed(3)+":1"]];
-  $("tiles").innerHTML=T.map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:""}</div>`).join("")}
+  const ext=`${nfmt(r.extW)} × ${nfmt(r.extH)}`,anc=`${+r.ax.toFixed(1)} / ${+r.ay.toFixed(1)}`;
+  const T=[["Extraction",ext,"",ext.length>12],["Extraction %",r.extPct.toFixed(2)+"%","",false],["Aspect",r.eaD.toFixed(3)+":1","",false],
+   ["Dailies",`${r.dw} × ${r.dh}`,"",false],["Anchor X / Y",anc,"centered",anc.length>12],["Source",`${r.sw} × ${r.sh}`,r.saD.toFixed(3)+":1",false]];
+  $("tiles").innerHTML=T.map(([k,v,s,w])=>`<div class="tile${w?" wide":""}"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:""}</div>`).join("")}
 function chipState(){const a=num("ar"),src=ASPECTS[$("ars").value][0]==="Source";
   document.querySelectorAll("#chips .chip").forEach(c=>c.classList.toggle("on",!src&&a!==null&&Math.abs(parseFloat(c.dataset.v)-a)<1e-7))}
 function calc(){
@@ -209,11 +213,11 @@ function calc(){
     const r=solve({sw:num("sw"),sh:num("sh"),tw:num("tw"),th:num("th"),ta:hasExt?null:num("ar"),ew:hasExt?num("ew"):null,eh:hasExt?num("eh"):null,ep:num("ep"),safety:num("sf")||0,squeeze:num("sq")||1,zb,ca:CONTAINERS[$("ct").value][1]||((num("tw")&&num("th"))?num("tw")/num("th"):null),rounding:$("rd").value});
     last=r;const z=zfmt(r.zoom)+"×";$("zoom").textContent=z;$("mz").textContent=z;$("zoom5").textContent=r.zoom.toFixed(5)+"×";
     $("sub").textContent=`${modeName()} · ${r.squeeze!==1?r.squeeze+"x anamorphic":"spherical"} · ${zb==="fitall"?"Fit All in "+CONTAINERS[$("ct").value][0]:"Fit"}`;
-    $("ms").textContent=`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)} · ${r.dw} × ${r.dh}`;
+    $("ms").textContent=`${nfmt(r.extW)} × ${nfmt(r.extH)} · ${r.dw} × ${r.dh}`;
     tiles(r);$("notes").className="note";$("notes").textContent=r.notes.join(" ");
   }catch(e){$("notes").className="note err";$("notes").textContent=e.message}
 }
-$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Zoom (5 decimals) ${r.zoom.toFixed(5)}x`,`Extraction ${r.extW.toFixed(0)} x ${r.extH.toFixed(0)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
+$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Zoom (5 decimals) ${r.zoom.toFixed(5)}x`,`Extraction ${nfmt(r.extW)} x ${nfmt(r.extH)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
   try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){prompt("Copy:",t)}setTimeout(()=>$("copy").textContent="Copy Result",1200)};
 $("reset").onclick=setDefaults;
 // compact glass bar appears once the big readout scrolls away
