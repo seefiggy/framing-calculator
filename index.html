@@ -36,6 +36,8 @@ h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px;margin:14p
 .hero{background:var(--group);border-radius:22px;padding:14px 12px 12px;text-align:center}
 .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
 #zoom{font:700 clamp(32px,11.4vw,54px)/1.1 ui-monospace,Menlo,monospace;color:var(--tint);margin:4px 0 2px;white-space:nowrap;letter-spacing:-.5px}
+.z5{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:0 0 4px}
+.z5 b{font:700 20px ui-monospace,Menlo,monospace;color:var(--fg);white-space:nowrap}
 #sub{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 6px}
 .tile{background:var(--group);border-radius:16px;padding:10px 10px 9px;min-width:0}
@@ -90,7 +92,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
 <h1>Framing Calculator</h1>
 <div class="bars" aria-hidden="true"></div>
 
-<section class="hero" id="hero"><div class="k">Zoom required</div><div id="zoom">--</div><div id="sub"></div></section>
+<section class="hero" id="hero"><div class="k">Zoom required</div><div id="zoom">--</div><div class="z5"><span class="k">5 decimals</span><b id="zoom5">--</b></div><div id="sub"></div></section>
 <div class="tiles" id="tiles"></div>
 <div class="note" id="notes"></div>
 
@@ -205,13 +207,13 @@ function calc(){
   chipState();
   try{
     const r=solve({sw:num("sw"),sh:num("sh"),tw:num("tw"),th:num("th"),ta:hasExt?null:num("ar"),ew:hasExt?num("ew"):null,eh:hasExt?num("eh"):null,ep:num("ep"),safety:num("sf")||0,squeeze:num("sq")||1,zb,ca:CONTAINERS[$("ct").value][1]||((num("tw")&&num("th"))?num("tw")/num("th"):null),rounding:$("rd").value});
-    last=r;const z=zfmt(r.zoom)+"×";$("zoom").textContent=z;$("mz").textContent=z;
+    last=r;const z=zfmt(r.zoom)+"×";$("zoom").textContent=z;$("mz").textContent=z;$("zoom5").textContent=r.zoom.toFixed(5)+"×";
     $("sub").textContent=`${modeName()} · ${r.squeeze!==1?r.squeeze+"x anamorphic":"spherical"} · ${zb==="fitall"?"Fit All in "+CONTAINERS[$("ct").value][0]:"Fit"}`;
     $("ms").textContent=`${r.extW.toFixed(0)} × ${r.extH.toFixed(0)} · ${r.dw} × ${r.dh}`;
     tiles(r);$("notes").className="note";$("notes").textContent=r.notes.join(" ");
   }catch(e){$("notes").className="note err";$("notes").textContent=e.message}
 }
-$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Extraction ${r.extW.toFixed(0)} x ${r.extH.toFixed(0)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
+$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Zoom (5 decimals) ${r.zoom.toFixed(5)}x`,`Extraction ${r.extW.toFixed(0)} x ${r.extH.toFixed(0)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
   try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){prompt("Copy:",t)}setTimeout(()=>$("copy").textContent="Copy Result",1200)};
 $("reset").onclick=setDefaults;
 // compact glass bar appears once the big readout scrolls away
