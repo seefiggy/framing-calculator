@@ -128,7 +128,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
  <div class="hintrow">Overrides the target aspect. Direct entries are never rounded.</div>
 </details>
 
-<div class="foot">Same math as Framing Calculator 7.35.<br>Nearest even matches the Netflix framing tool. True math keeps the exact decimals.</div>
+<div class="foot">Same math as Framing Calculator 7.36.<br>Nearest even matches the Netflix framing tool. True math keeps the exact decimals.</div>
 </main>
 
 <div id="bar" class="glass"><button id="reset">Reset</button><button id="copy" class="p">Copy Result</button></div>
@@ -167,7 +167,7 @@ function solve(o){
   if(zb==="fitall"&&saD<c){zoom=c*sh/(extW*squeeze);notes.push(`Zoom ${zfmt(zoom)}x: Fit All in a ${c.toFixed(3)}:1 container (whole image inside the container, extraction then fills its width).`)}
   else{zoom=sw/extW;notes.push(`Zoom ${zfmt(zoom)}x: `+(zb==="fitall"?`Fit All equals Fit here, the ${saD.toFixed(3)}:1 image already fills a ${c.toFixed(3)}:1 container's width.`:"Fit (image width fills the container)."))}
   const eaD=extW/extH*squeeze;let dw,dh;
-  if(tw&&th){dw=pyRound(tw);dh=pyRound(th)}else{dw=tw?pyRound(tw):1920;dh=pyRound(dw/eaD);notes.push(`Dailies res estimated at ${dw} wide: ${dw}x${dh}.`)}
+  if(tw&&th){dw=pyRound(tw);dh=pyRound(th)}else{dw=tw?pyRound(tw):1920;dh=2*pyRound(dw/saD/2);notes.push(`Dailies res: ${dw} wide / source aspect ${saD.toFixed(3)}:1 = ${dw}x${dh} (height rounded to nearest even).`)}
   return {sw,sh,squeeze,saD,extW,extH,extPct,eaD,zoom,zb,ca:c,dw,dh,ax:(sw-extW)/2,ay:(sh-extH)/2,notes};
 }
 // ---- UI ----
