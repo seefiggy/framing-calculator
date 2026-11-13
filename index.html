@@ -108,7 +108,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
 <div class="gh">Framing</div>
 <div class="list">
  <div class="item chev"><label for="ars">Target aspect</label><div class="ctl"><select id="ars"></select></div></div>
- <div class="item"><label>Aspect value</label><div class="ctl"><input id="ar" inputmode="decimal" aria-label="Aspect value"><span class="x">:1</span></div></div>
+ <div class="item"><label>Aspect value</label><div class="ctl"><input id="ar" inputmode="decimal" aria-label="Aspect value"><span class="x">:1</span><span class="x" id="arw"></span></div></div>
  <div class="chips" id="chips" style="border-top:.5px solid var(--sep);border-bottom:.5px solid var(--sep)"></div>
  <div class="item"><label>Safety margin</label><div class="ctl"><input id="sf" inputmode="decimal" value="0" style="width:4em" aria-label="Safety margin percent"><span class="x">%</span></div></div>
  <div class="item chev"><label for="rd">Rounding</label><div class="ctl"><select id="rd"><option value="near">Nearest even</option><option value="up">Round up</option><option value="true">True math</option></select></div></div>
@@ -128,7 +128,7 @@ details[open].list>summary::after{transform:rotate(90deg)}
  <div class="hintrow">Overrides the target aspect. Direct entries are never rounded.</div>
 </details>
 
-<div class="foot">Same math as Framing Calculator 7.36.<br>Nearest even matches the Netflix framing tool. True math keeps the exact decimals.</div>
+<div class="foot">Same math as Framing Calculator 7.38.<br>Nearest even matches the Netflix framing tool. True math keeps the exact decimals.<br>Whole-number ratios (for example 239:100) show the exact ratio; a leading ≈ means approximate.</div>
 </main>
 
 <div id="bar" class="glass"><button id="reset">Reset</button><button id="copy" class="p">Copy Result</button></div>
@@ -144,6 +144,8 @@ const $=id=>document.getElementById(id);
 const zfmt=z=>z.toFixed(ZOOM_DECIMALS);
 const nfmt=x=>(+x.toFixed(3)).toString();
 const afmt=v=>String(+v.toPrecision(10));
+function wholeRatio(v,maxDen=1000,tol=1e-9){v=+v;if(!(v>0)||!isFinite(v))return"";let best=null;for(let d=1;d<=maxDen;d++){const n=Math.round(v*d);if(n<1)continue;const err=Math.abs(n/d-v);if(err<=v*tol)return n+":"+d;if(!best||err<best[0]-1e-15)best=[err,n,d]}return best?"\u2248 "+best[1]+":"+best[2]:""}
+const dl=(t,v)=>{if(!v)return t;const r=wholeRatio(v);return t.includes(r)?t:`${t} \u00b7 ${r}`};
 function pyRound(x){const f=Math.floor(x),d=x-f;if(Math.abs(d-0.5)<1e-12)return f%2===0?f:f+1;return Math.round(x)}
 function evenNear(x,limit){const v=2*Math.floor(x/2+0.5+1e-9);return v<=limit?v:2*Math.floor(limit/2)}
 function evenUp(x,limit){const v=2*Math.ceil(x/2-1e-9);return v<=limit?v:2*Math.floor(limit/2)}
@@ -180,7 +182,7 @@ opts($("mfr"),mfrKeys());
 function fillModes(){opts($("mode"),modeKeys());applyMode()}
 function applyMode(){const r=CAMERAS[mfrName()][modeName()];if(r){$("sw").value=r[0];$("sh").value=r[1]}calc()}
 $("mfr").onchange=fillModes;$("mode").onchange=applyMode;
-opts($("ars"),ASPECTS.map(a=>a[0]));opts($("ct"),CONTAINERS.map(a=>a[0]));
+opts($("ars"),ASPECTS.map(a=>dl(a[0],a[1])));opts($("ct"),CONTAINERS.map(a=>dl(a[0],a[1])));
 CHIPS.forEach(([t,v])=>{const d=document.createElement("div");d.className="chip";d.textContent=t;d.dataset.v=v;d.onclick=()=>{$("ars").value=ASPECTS.length-1;$("ar").value=afmt(v);calc()};$("chips").appendChild(d)});
 function srcAspect(){const w=num("sw"),h=num("sh"),s=num("sq")||1;return w&&h?afmt(w/h*s):""}
 function setDefaults(){
@@ -200,8 +202,8 @@ document.querySelectorAll("#zbseg button").forEach(b=>b.onclick=()=>{setZb(b.dat
 document.querySelectorAll("input,select").forEach(e=>{if(!["mfr","mode"].includes(e.id)){e.addEventListener("input",calc);e.addEventListener("change",calc)}});
 function tiles(r){
   const ext=`${nfmt(r.extW)} × ${nfmt(r.extH)}`,anc=`${+r.ax.toFixed(1)} / ${+r.ay.toFixed(1)}`;
-  const T=[["Extraction",ext,"",ext.length>12],["Extraction %",r.extPct.toFixed(2)+"%","",false],["Aspect",r.eaD.toFixed(3)+":1","",false],
-   ["Dailies",`${r.dw} × ${r.dh}`,"",false],["Anchor X / Y",anc,"centered",anc.length>12],["Source",`${r.sw} × ${r.sh}`,r.saD.toFixed(3)+":1",false]];
+  const T=[["Extraction",ext,"",ext.length>12],["Extraction %",r.extPct.toFixed(2)+"%","",false],["Aspect",r.eaD.toFixed(3)+":1",wholeRatio(r.eaD),false],
+   ["Dailies",`${r.dw} × ${r.dh}`,"",false],["Anchor X / Y",anc,"centered",anc.length>12],["Source",`${r.sw} × ${r.sh}`,r.saD.toFixed(3)+":1 · "+wholeRatio(r.saD),false]];
   $("tiles").innerHTML=T.map(([k,v,s,w])=>`<div class="tile${w?" wide":""}"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:""}</div>`).join("")}
 function chipState(){const a=num("ar"),src=ASPECTS[$("ars").value][0]==="Source";
   document.querySelectorAll("#chips .chip").forEach(c=>c.classList.toggle("on",!src&&a!==null&&Math.abs(parseFloat(c.dataset.v)-a)<1e-7))}
@@ -209,6 +211,7 @@ function calc(){
   const hasExt=(num("ew")&&num("eh"))||num("ep");
   if(!hasExt&&ASPECTS[$("ars").value][0]==="Source")$("ar").value=srcAspect();
   chipState();
+  $("arw").textContent=num("ar")>0?"= "+wholeRatio(num("ar")):"";
   try{
     const r=solve({sw:num("sw"),sh:num("sh"),tw:num("tw"),th:num("th"),ta:hasExt?null:num("ar"),ew:hasExt?num("ew"):null,eh:hasExt?num("eh"):null,ep:num("ep"),safety:num("sf")||0,squeeze:num("sq")||1,zb,ca:CONTAINERS[$("ct").value][1]||((num("tw")&&num("th"))?num("tw")/num("th"):null),rounding:$("rd").value});
     last=r;const z=zfmt(r.zoom)+"×";$("zoom").textContent=z;$("mz").textContent=z;$("zoom5").textContent=r.zoom.toFixed(3)+"×";
@@ -217,7 +220,7 @@ function calc(){
     tiles(r);$("notes").className="note";$("notes").textContent=r.notes.join(" ");
   }catch(e){$("notes").className="note err";$("notes").textContent=e.message}
 }
-$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1`,`Zoom ${zfmt(r.zoom)}x`,`Zoom (3 decimals) ${r.zoom.toFixed(3)}x`,`Extraction ${nfmt(r.extW)} x ${nfmt(r.extH)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
+$("copy").onclick=async()=>{if(!last)return;const r=last;const t=[`${mfrName()} - ${modeName()}`,`Source ${r.sw} x ${r.sh}`+(r.squeeze!==1?` (${r.squeeze}x squeeze)`:""),`Source aspect ${r.saD.toFixed(3)}:1 (${wholeRatio(r.saD)})`,`Zoom ${zfmt(r.zoom)}x`,`Zoom (3 decimals) ${r.zoom.toFixed(3)}x`,`Extraction ${nfmt(r.extW)} x ${nfmt(r.extH)} (${r.extPct.toFixed(2)}%)`,`Anchor X ${+r.ax.toFixed(1)} / Y ${+r.ay.toFixed(1)}`,`Aspect ${r.eaD.toFixed(3)}:1 (${wholeRatio(r.eaD)})`,`Dailies ${r.dw} x ${r.dh}`].join("\n");
   try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){prompt("Copy:",t)}setTimeout(()=>$("copy").textContent="Copy Result",1200)};
 $("reset").onclick=setDefaults;
 // compact glass bar appears once the big readout scrolls away
